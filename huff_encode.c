@@ -79,9 +79,65 @@ Arbre ConstruireArbre(fap file) {
 }
 
 
+void ConstruireCodeRec(Arbre huff, int code[], int longueur) {
+    if (EstVide(huff)) {
+        return;
+    }
+    
+    /* Si c'est une feuille (les deux enfants sont vides) */
+    if (EstVide(FilsGauche(huff)) && EstVide(FilsDroit(huff))) {
+        Element caractere = Etiq(huff);
+        /* Stocker le code pour ce caractère */
+        HuffmanCode[caractere].lg = longueur;
+        int i;
+        for (i = 0; i < longueur; i++) {
+            HuffmanCode[caractere].code[i] = code[i];
+        }
+        return;
+    }
+    
+    /* Parcourir le fils gauche (ajouter 0) */
+    if (!EstVide(FilsGauche(huff))) {
+        code[longueur] = 0;
+        ConstruireCodeRec(FilsGauche(huff), code, longueur + 1);
+    }
+    
+    /* Parcourir le fils droit (ajouter 1) */
+    if (!EstVide(FilsDroit(huff))) {
+        code[longueur] = 1;
+        ConstruireCodeRec(FilsDroit(huff), code, longueur + 1);
+    }
+}
+
 void ConstruireCode(Arbre huff) {
-    /* A COMPLETER */
-    printf("Programme non realise (ConstruireCode)\n");
+    int i;
+    int code[256];
+    
+    /* Initialiser tous les codes à une longueur de 0 */
+    for (i = 0; i < 256; i++) {
+        HuffmanCode[i].lg = 0;
+    }
+    
+    /* Construire les codes en parcourant l'arbre */
+    if (!EstVide(huff)) {
+        ConstruireCodeRec(huff, code, 0);
+    }
+}
+
+void AfficherTableHuffman() {
+    int i, j;
+    printf("\n=== Table de codage Huffman ===\n");
+    for (i = 0; i < 256; i++) {
+        if (HuffmanCode[i].lg > 0) {
+            printf("Caractere '%c' (code ASCII %d) : ", i, i);
+            printf("longueur = %d, code = ", HuffmanCode[i].lg);
+            for (j = 0; j < HuffmanCode[i].lg; j++) {
+                printf("%d", HuffmanCode[i].code[j]);
+            }
+            printf("\n");
+        }
+    }
+    printf("================================\n\n");
 }
 
 void Encoder(FILE *fic_in, FILE *fic_out, Arbre ArbreHuffman) {
@@ -110,6 +166,9 @@ int main(int argc, char *argv[]) {
 
     /* Construire la table de codage */
     ConstruireCode(ArbreHuffman);
+    
+    /* Afficher la table Huffman pour debug */
+    AfficherTableHuffman();
 
     /* Encodage */
     fichier = fopen(argv[1], "r");
